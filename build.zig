@@ -46,6 +46,17 @@ pub fn build(b: *std.Build) void {
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_exe_unit_tests.step);
+
+    const repro_unit_tests = b.addTest(.{
+        .root_source_file = .{ .path = "src/repro.zig" },
+        .target = target,
+        .optimize = optimize,
+    });
+    repro_unit_tests.root_module.linkLibrary(lib);
+
+    const run_repro_unit_tests = b.addRunArtifact(repro_unit_tests);
+    const rec_test_step = b.step("repro", "Run unit tests");
+    rec_test_step.dependOn(&run_repro_unit_tests.step);
 }
 
 const SourceList = []const []const u8;
