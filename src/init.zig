@@ -236,7 +236,7 @@ pub inline fn rayCastInput(
     return .{
         .origin = origin,
         .translation = translation,
-        .maxFraction = max_fraction,
+        .maxFraction = floatFromAny(f32, max_fraction),
     };
 }
 

@@ -31,7 +31,7 @@ pub fn build(b: *std.Build) void {
 
     // ========== HELPER ==========
 
-    const helper_mod = b.addModule("box2dc_zig", .{
+    const helper_mod = b.addModule("root", .{
         .root_source_file = b.path("src/init.zig"),
     });
     helper_mod.linkLibrary(lib);
