@@ -10,34 +10,37 @@ pub fn build(b: *std.Build) void {
         .name = "box2dc",
         .target = target,
         .optimize = optimize,
-        .root_source_file = .{ .path = "src/extern.zig" },
+        .root_source_file = b.path("src/export.zig"),
     });
 
     lib.root_module.addCSourceFiles(.{
         .root = box2dc_dep.path("src"),
         .files = box2d_source_files,
+        .flags = &.{ "-Wno-psabi", "-mavx2" },
     });
     lib.linkLibC();
     lib.addIncludePath(box2dc_dep.path("extern/simde"));
     lib.addIncludePath(box2dc_dep.path("src"));
     lib.addIncludePath(box2dc_dep.path("include"));
 
-    lib.installHeadersDirectory(box2dc_dep.path("src").getPath(b), "box2d");
-    lib.installHeadersDirectory(box2dc_dep.path("include/box2d").getPath(b), "box2d");
+    lib.installHeadersDirectory(box2dc_dep.path("src"), "box2d", .{});
+    lib.installHeadersDirectory(box2dc_dep.path("include/box2d"), "box2d", .{});
+    lib.installHeadersDirectory(box2dc_dep.path("extern/simde"), "box2d", .{});
 
     b.installArtifact(lib);
 
     // ========== HELPER ==========
 
-    const helper_mod = b.addModule("box2d_zig", .{
-        .root_source_file = .{ .path = "src/init.zig" },
+    const helper_mod = b.addModule("box2dc_zig", .{
+        .root_source_file = b.path("src/init.zig"),
     });
     helper_mod.linkLibrary(lib);
+    helper_mod.addIncludePath(box2dc_dep.path("extern/simde"));
 
     // ========== TESTS ==========
 
     const exe_unit_tests = b.addTest(.{
-        .root_source_file = .{ .path = "src/tests.zig" },
+        .root_source_file = b.path("src/tests.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -46,17 +49,6 @@ pub fn build(b: *std.Build) void {
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_exe_unit_tests.step);
-
-    const repro_unit_tests = b.addTest(.{
-        .root_source_file = .{ .path = "src/repro.zig" },
-        .target = target,
-        .optimize = optimize,
-    });
-    repro_unit_tests.root_module.linkLibrary(lib);
-
-    const run_repro_unit_tests = b.addRunArtifact(repro_unit_tests);
-    const rec_test_step = b.step("repro", "Run unit tests");
-    rec_test_step.dependOn(&run_repro_unit_tests.step);
 }
 
 const SourceList = []const []const u8;
