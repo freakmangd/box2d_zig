@@ -3,46 +3,36 @@ const assert = std.debug.assert;
 
 pub const c = @cImport({
     // api includes
-    @cInclude("box2d/api.h");
+    @cInclude("box2d/base.h");
     @cInclude("box2d/box2d.h");
-    @cInclude("box2d/aabb.h");
-    @cInclude("box2d/callbacks.h");
-    @cInclude("box2d/color.h");
-    @cInclude("box2d/constants.h");
-    @cInclude("box2d/debug_draw.h");
-    @cInclude("box2d/distance.h");
-    @cInclude("box2d/dynamic_tree.h");
-    @cInclude("box2d/event_types.h");
-    @cInclude("box2d/geometry.h");
-    @cInclude("box2d/hull.h");
+    @cInclude("box2d/collision.h");
     @cInclude("box2d/id.h");
-    @cInclude("box2d/joint_types.h");
-    @cInclude("box2d/manifold.h");
-    @cInclude("box2d/math.h");
-    @cInclude("box2d/math_types.h");
-    @cInclude("box2d/timer.h");
+    @cInclude("box2d/math_functions.h");
     @cInclude("box2d/types.h");
 
     // src includes
-    @cInclude("box2d/allocate.h");
+    @cInclude("box2d/aabb.h");
+    @cInclude("box2d/arena_allocator.h");
     @cInclude("box2d/array.h");
+    @cInclude("box2d/atomic.h");
     @cInclude("box2d/bitset.h");
-    @cInclude("box2d/broad_phase.h");
     @cInclude("box2d/body.h");
-    @cInclude("box2d/block_allocator.h");
-    @cInclude("box2d/core.h");
-    @cInclude("box2d/contact_solver.h");
-    @cInclude("box2d/contact.h");
+    @cInclude("box2d/broad_phase.h");
+    @cInclude("box2d/constants.h");
     @cInclude("box2d/constraint_graph.h");
+    @cInclude("box2d/contact.h");
+    @cInclude("box2d/contact_solver.h");
+    @cInclude("box2d/core.h");
+    @cInclude("box2d/ctz.h");
+    @cInclude("box2d/id_pool.h");
     @cInclude("box2d/island.h");
     @cInclude("box2d/joint.h");
+    @cInclude("box2d/sensor.h");
+    @cInclude("box2d/shape.h");
+    @cInclude("box2d/solver.h");
+    @cInclude("box2d/solver_set.h");
     @cInclude("box2d/table.h");
     @cInclude("box2d/world.h");
-    @cInclude("box2d/stack_allocator.h");
-    @cInclude("box2d/allocate.h");
-    @cInclude("box2d/solver.h");
-    @cInclude("box2d/pool.h");
-    @cInclude("box2d/polygon_shape.h");
 });
 
 pub const WorldId = c.b2WorldId;
@@ -131,14 +121,14 @@ pub inline fn circleS(
     point_y: anytype, // castable to float
     radius: anytype, // castable to float
 ) Circle {
-    return .{ .point = vec2(point_x, point_y), .radius = floatFromAny(f32, radius) };
+    return .{ .center = vec2(point_x, point_y), .radius = floatFromAny(f32, radius) };
 }
 
 pub inline fn circle(
     point: Vec2,
     radius: anytype, // castable to float
 ) Circle {
-    return .{ .point = point, .radius = floatFromAny(f32, radius) };
+    return .{ .center = point, .radius = floatFromAny(f32, radius) };
 }
 
 pub inline fn capsuleS(
@@ -149,8 +139,8 @@ pub inline fn capsuleS(
     radius: anytype, // castable to float
 ) Capsule {
     return .{
-        .point1 = vec2(point1_x, point1_y),
-        .point2 = vec2(point2_x, point2_y),
+        .center1 = vec2(point1_x, point1_y),
+        .center2 = vec2(point2_x, point2_y),
         .radius = floatFromAny(f32, radius),
     };
 }
@@ -161,8 +151,8 @@ pub inline fn capsule(
     radius: anytype, // castable to float
 ) Capsule {
     return .{
-        .point1 = point1,
-        .point2 = point2,
+        .center1 = point1,
+        .center2 = point2,
         .radius = floatFromAny(f32, radius),
     };
 }

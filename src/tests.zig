@@ -71,7 +71,7 @@ test "hello world" {
     const subStepCount = 4;
 
     var position = c.b2Body_GetPosition(bodyId);
-    var angle = c.b2Body_GetAngle(bodyId);
+    var angle = c.b2Body_GetRotation(bodyId);
 
     // This is our little game loop.
     for (0..90) |_| {
@@ -81,14 +81,14 @@ test "hello world" {
 
         // Now print the position and angle of the body.
         position = c.b2Body_GetPosition(bodyId);
-        angle = c.b2Body_GetAngle(bodyId);
+        angle = c.b2Body_GetRotation(bodyId);
 
         //printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
     }
 
     try expect(@abs(position.x) < 0.01);
     try expect(@abs(position.y - 1.00) < 0.01);
-    try expect(@abs(angle) < 0.01);
+    try expect(@abs(c.b2Rot_GetAngle(angle)) < 0.01);
 }
 
 test "empty world" {
@@ -181,10 +181,10 @@ test "bitset" {
 
 test "collision" {
     var a = b2.aabbS(-1, -1, -2, -2);
-    try expect(c.b2AABB_IsValid(a) == false);
+    try expect(c.b2IsValidAABB(a) == false);
 
     a.upperBound = b2.vec2(1, 1);
-    try expect(c.b2AABB_IsValid(a) == true);
+    try expect(c.b2IsValidAABB(a) == true);
 
     const b = b2.aabbS(2, 2, 4, 4);
     try expect(c.b2AABB_Overlaps(a, b) == false);
@@ -235,8 +235,8 @@ test "shape distance" {
         .useRadii = false,
     };
 
-    var cache: c.b2DistanceCache = .{};
-    const output = c.b2ShapeDistance(&cache, &input);
+    var cache: c.b2SimplexCache = .{};
+    const output = c.b2ShapeDistance(&cache, &input, null, 0);
 
     try expectApproxEqAbs(0, output.distance - 1.0, epsilon);
 }
@@ -264,7 +264,7 @@ test "shape cast" {
     const output = c.b2ShapeCast(&input);
 
     try expect(output.hit);
-    try expectApproxEqAbs(0, output.fraction - 0.5, c.b2_linearSlop);
+    try expectApproxEqAbs(0, output.fraction - 0.5, c.B2_LINEAR_SLOP());
 }
 
 test "time of impact" {
@@ -296,12 +296,12 @@ test "time of impact" {
             c.b2Rot_identity,
             c.b2Rot_identity,
         ),
-        .tMax = 1.0,
+        .maxFraction = 1.0,
     };
     const output = c.b2TimeOfImpact(&input);
 
     try expectEqual(@as(c_uint, @intCast(c.b2_toiStateHit)), output.state);
-    try expectApproxEqAbs(0, output.t - 0.5, c.b2_linearSlop);
+    try expectApproxEqAbs(0, output.fraction - 0.5, c.B2_LINEAR_SLOP());
 }
 
 test "math" {
@@ -346,15 +346,15 @@ test "shape mass" {
 
     {
         const md = c.b2ComputeCircleMass(&circle, 1.0);
-        try expectApproxEqAbs(0, md.mass - c.b2_pi, epsilon);
+        try expectApproxEqAbs(0, md.mass - c.B2_PI, epsilon);
         try expectEqual(1, md.center.x);
         try expectEqual(0, md.center.y);
-        try expectApproxEqAbs(0, md.I - 1.5 * c.b2_pi, epsilon);
+        try expectApproxEqAbs(0, md.rotationalInertia - 1.5 * c.B2_PI, epsilon);
     }
 
     {
         const radius = capsule.radius;
-        const length = c.b2Distance(capsule.point1, capsule.point2);
+        const length = c.b2Distance(capsule.center1, capsule.center2);
 
         const md = c.b2ComputeCapsuleMass(&capsule, 1.0);
 
@@ -364,15 +364,15 @@ test "shape mass" {
 
         // Approximate capsule using convex hull
         var points: [2 * n]b2.Vec2 = undefined;
-        const d = c.b2_pi / (n - 1.0);
-        var angle = -0.5 * c.b2_pi;
+        const d = c.B2_PI / (n - 1.0);
+        var angle = -0.5 * c.B2_PI;
         for (0..n) |i| {
             points[i].x = 1.0 + radius * @cos(angle);
             points[i].y = radius * @sin(angle);
             angle += d;
         }
 
-        angle = 0.5 * c.b2_pi;
+        angle = 0.5 * c.B2_PI;
         for (n..2 * n) |i| {
             points[i].x = -1.0 + radius * @cos(angle);
             points[i].y = radius * @sin(angle);
@@ -384,7 +384,7 @@ test "shape mass" {
         const ma = c.b2ComputePolygonMass(&ac, 1.0);
 
         try expect(ma.mass < md.mass and md.mass < mdr.mass);
-        try expect(ma.I < md.I and md.I < mdr.I);
+        try expect(ma.rotationalInertia < md.rotationalInertia and md.rotationalInertia < mdr.rotationalInertia);
     }
 
     {
@@ -392,7 +392,7 @@ test "shape mass" {
         try expectApproxEqAbs(0, md.mass - 4.0, epsilon);
         try expectApproxEqAbs(0, md.center.x, epsilon);
         try expectApproxEqAbs(0, md.center.y, epsilon);
-        try expectApproxEqAbs(0, md.I - 8.0 / 3.0, 2.0 * epsilon);
+        try expectApproxEqAbs(0, md.rotationalInertia - 8.0 / 3.0, 2.0 * epsilon);
     }
 }
 

@@ -1,8 +1,9 @@
 .{
-    .name = "box2dc_zig",
+    .name = .box2d_zig,
     // This is a [Semantic Version](https://semver.org/).
     // In a future version of Zig it will be used for package deduplication.
     .version = "0.0.0",
+    .fingerprint = 0xca31309b0276d15c,
 
     // This field is optional.
     // This is currently advisory only; Zig does not yet do anything
@@ -15,9 +16,9 @@
     // Once all dependencies are fetched, `zig build` no longer requires
     // internet connectivity.
     .dependencies = .{
-        .box2dc = .{
-            .url = "https://github.com/erincatto/box2c/archive/29adfcfb4dbc371a50e37d8e17b072d990ad7ae6.tar.gz",
-            .hash = "1220d5585357ae14c92268925417fb6e35a63a2f3b8a8ee8893aa8e74f980978680b",
+        .box2d = .{
+            .url = "git+https://github.com/erincatto/box2d#28adacf82377d4113f2ed00586141463244b9d10",
+            .hash = "N-V-__8AANvnKQC__uvKoyNgcaAHv2Pbt9ejfs-9vOjKh4Ks",
         },
     },
     .paths = .{

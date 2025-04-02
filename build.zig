@@ -4,7 +4,7 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const box2dc_dep = b.dependency("box2dc", .{});
+    const box2d_dep = b.dependency("box2d", .{});
 
     const lib = b.addStaticLibrary(.{
         .name = "box2dc",
@@ -14,18 +14,16 @@ pub fn build(b: *std.Build) void {
     });
 
     lib.root_module.addCSourceFiles(.{
-        .root = box2dc_dep.path("src"),
+        .root = box2d_dep.path("src"),
         .files = box2d_source_files,
         .flags = &.{ "-Wno-psabi", "-mavx2" },
     });
     lib.linkLibC();
-    lib.addIncludePath(box2dc_dep.path("extern/simde"));
-    lib.addIncludePath(box2dc_dep.path("src"));
-    lib.addIncludePath(box2dc_dep.path("include"));
+    lib.addIncludePath(box2d_dep.path("src"));
+    lib.addIncludePath(box2d_dep.path("include"));
 
-    lib.installHeadersDirectory(box2dc_dep.path("src"), "box2d", .{});
-    lib.installHeadersDirectory(box2dc_dep.path("include/box2d"), "box2d", .{});
-    lib.installHeadersDirectory(box2dc_dep.path("extern/simde"), "box2d", .{});
+    lib.installHeadersDirectory(box2d_dep.path("src"), "box2d", .{});
+    lib.installHeadersDirectory(box2d_dep.path("include/box2d"), "box2d", .{});
 
     b.installArtifact(lib);
 
@@ -33,17 +31,20 @@ pub fn build(b: *std.Build) void {
 
     const helper_mod = b.addModule("root", .{
         .root_source_file = b.path("src/init.zig"),
+        .target = target,
+        .optimize = optimize,
     });
     helper_mod.linkLibrary(lib);
-    helper_mod.addIncludePath(box2dc_dep.path("extern/simde"));
 
     // ========== TESTS ==========
 
-    const exe_unit_tests = b.addTest(.{
+    const tests_mod = b.createModule(.{
         .root_source_file = b.path("src/tests.zig"),
         .target = target,
         .optimize = optimize,
     });
+
+    const exe_unit_tests = b.addTest(.{ .root_module = tests_mod });
     exe_unit_tests.root_module.linkLibrary(lib);
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
@@ -55,10 +56,9 @@ const SourceList = []const []const u8;
 
 const box2d_source_files: SourceList = &.{
     "aabb.c",
-    "allocate.c",
+    "arena_allocator.c",
     "array.c",
     "bitset.c",
-    "block_allocator.c",
     "body.c",
     "broad_phase.c",
     "constraint_graph.c",
@@ -70,19 +70,19 @@ const box2d_source_files: SourceList = &.{
     "dynamic_tree.c",
     "geometry.c",
     "hull.c",
-    "implementation.c",
+    "id_pool.c",
     "island.c",
     "joint.c",
     "manifold.c",
-    "math.c",
+    "math_functions.c",
     "motor_joint.c",
     "mouse_joint.c",
-    "pool.c",
     "prismatic_joint.c",
     "revolute_joint.c",
+    "sensor.c",
     "shape.c",
     "solver.c",
-    "stack_allocator.c",
+    "solver_set.c",
     "table.c",
     "timer.c",
     "types.c",
