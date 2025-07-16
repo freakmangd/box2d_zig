@@ -6,11 +6,14 @@ pub fn build(b: *std.Build) void {
 
     const box2d_dep = b.dependency("box2d", .{});
 
-    const lib = b.addStaticLibrary(.{
+    const lib = b.addLibrary(.{
         .name = "box2dc",
-        .target = target,
-        .optimize = optimize,
-        .root_source_file = b.path("src/export.zig"),
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/export.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+        .linkage = .static,
     });
 
     lib.root_module.addCSourceFiles(.{
